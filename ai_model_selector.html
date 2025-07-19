@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Model Selection - Video Object Detection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .section:hover {
+            border-color: #3498db;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            background: #3498db;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+
+        .model-option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .model-option:hover {
+            border-color: #3498db;
+            background: #f0f8ff;
+        }
+
+        .model-option.selected {
+            border-color: #2ecc71;
+            background: #e8f5e8;
+        }
+
+        .model-option input[type="radio"] {
+            margin-right: 15px;
+            transform: scale(1.2);
+            accent-color: #2ecc71;
+        }
+
+        .model-info {
+            flex: 1;
+        }
+
+        .model-name {
+            font-weight: 600;
+            font-size: 1.1em;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .model-description {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .model-specs {
+            margin-top: 8px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .spec-tag {
+            background: #3498db;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .processing-options {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .option-group {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .option-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            transform: scale(1.1);
+            accent-color: #2ecc71;
+        }
+
+        .slider-group {
+            margin-top: 15px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            border: none;
+        }
+
+        .action-buttons {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #7f8c8d, #95a5a6);
+            transform: translateY(-2px);
+        }
+
+        .btn-export {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .btn-export:hover {
+            background: linear-gradient(135deg, #c0392b, #e74c3c);
+            transform: translateY(-2px);
+        }
+
+        .config-output {
+            grid-column: 1 / -1;
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin-top: 20px;
+            min-height: 200px;
+            white-space: pre-wrap;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        .status-ready { background: #2ecc71; }
+        .status-loading { background: #f39c12; animation: pulse 1.5s infinite; }
+        .status-error { background: #e74c3c; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Model Selection</h1>
+            <p>Configure your video object detection pipeline with advanced AI models</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Object Detection Models -->
+            <div class="section">
+                <div class="section-title">
+                    <div class="icon">🎯</div>
+                    Object Detection Models
+                </div>
+                
+                <div class="model-option" onclick="selectModel('yolo', this)">
+                    <input type="radio" name="detection_model" value="yolo" id="yolo" checked>
+                    <div class="model-info">
+                        <div class="model-name">YOLOv8 Nano <span class="status-indicator status-ready"></span></div>
+                        <div class="model-description">Ultra-fast object detection for real-time processing</div>
+                        <div class="model-specs">
+                            <span class="spec-tag">Fast</span>
+                            <span class="spec-tag">80 Classes</span>
+                            <span class="spec-tag">~6MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="model-option" onclick="selectModel('yolo_medium', this)">
+                    <input type="radio" name="detection_model" value="yolo_medium" id="yolo_medium">
+                    <div class="model-info">
+                        <div class="model-name">YOLOv8 Medium <span class="status-indicator status-ready"></span></div>
+                        <div class="model-description">Balanced speed and accuracy for general use</div>
+                        <div class="model-specs">
+                            <span class="spec-tag">Balanced</span>
+                            <span class="spec-tag">80 Classes</span>
+                            <span class="spec-tag">~25MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="model-option" onclick="selectModel('yolo_large', this)">
+                    <input type="radio" name="detection_model" value="yolo_large" id="yolo_large">
+                    <div class="model-info">
+                        <div class="model-name">YOLOv8 Large <span class="status-indicator status-ready"></span></div>
+                        <div class="model-description">High accuracy detection for precision applications</div>
+                        <div class="model-specs">
+                            <span class="spec-tag">Accurate</span>
+                            <span class="spec-tag">80 Classes</span>
+                            <span class="spec-tag">~87MB</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Understanding Models -->
+            <div class="section">
+                <div class="section-title">
+                    <div class="icon">👁️</div>
+                    Image Understanding Models
+                </div>
+                
+                <div class="model-option" onclick="selectModel('blip_base', this)">
+                    <input type="radio" name="caption_model" value="blip_base" id="blip_base" checked>
+                    <div class="model-info">
+                        <div class="model-name">BLIP Base <span class="status-indicator status-ready"></span></div>
+                        <div class="model-description">Image captioning and visual question answering</div>
+                        <div class="model-specs">
+                            <span class="spec-tag">Captions</span>
+                            <span class="spec-tag">VQA</span>
+                            <span class="spec-tag">~990MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="model-option" onclick="selectModel('blip_large', this)">
+                    <input type="radio" name="caption_model" value="blip_large" id="blip_large">
+                    <div class="model-info">
+                        <div class="model-name">BLIP Large <span class="status-indicator status-loading"></span></div>
+                        <div class="model-description">Advanced image understanding with better context</div>
+                        <div class="model-specs">
+                            <span class="spec-tag">Advanced</span>
+                            <span class="spec-tag">Context</span>
+                            <span class="spec-tag">~1.8GB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="model-option" onclick="selectModel('clip', this)">
+                    <input type="radio" name="caption_model" value="clip" id="clip">
+                    <div class="model-info">
+                        <div class="model-name">CLIP <span class="status-indicator status-ready"></span></div>
+                        <div class="model-description">Multi-modal understanding for text and images</div>
+                        <div class="model-specs">
+                            <span class="spec-tag">Multi-modal</span>
+                            <span class="spec-tag">Zero-shot</span>
+                            <span class="spec-tag">~600MB</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Processing Options -->
+            <div class="processing-options">
+                <div class="option-group">
+                    <div class="option-title">🎬 Video Processing</div>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="preserve_audio" checked>
+                            <label for="preserve_audio">Preserve Original Audio</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="object_tracking">
+                            <label for="object_tracking">Enable Object Tracking</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="motion_trails">
+                            <label for="motion_trails">Show Motion Trails</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="frame_analytics">
+                            <label for="frame_analytics">Generate Analytics</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <div class="option-title">🎨 Visual Enhancement</div>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="colored_outlines" checked>
+                            <label for="colored_outlines">Colored Object Outlines</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="class_labels" checked>
+                            <label for="class_labels">Show Class Labels</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="confidence_scores" checked>
+                            <label for="confidence_scores">Display Confidence Scores</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="object_ids">
+                            <label for="object_ids">Show Object IDs</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <div class="option-title">⚡ Performance Settings</div>
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Confidence Threshold</span>
+                            <span id="confidence_value">0.5</span>
+                        </div>
+                        <input type="range" class="slider" id="confidence_threshold" min="0.1" max="0.9" step="0.1" value="0.5">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Processing Quality</span>
+                            <span id="quality_value">Medium</span>
+                        </div>
+                        <input type="range" class="slider" id="processing_quality" min="1" max="3" step="1" value="2">
+                    </div>
+                    
+                    <div class="checkbox-group" style="margin-top: 15px;">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="gpu_acceleration" checked>
+                            <label for="gpu_acceleration">GPU Acceleration</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="batch_processing">
+                            <label for="batch_processing">Batch Processing</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <div class="option-title">📊 Output Options</div>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="save_detections" checked>
+                            <label for="save_detections">Save Detection Data</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="export_frames">
+                            <label for="export_frames">Export Key Frames</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="generate_summary">
+                            <label for="generate_summary">Generate Summary Report</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="create_timeline">
+                            <label for="create_timeline">Create Object Timeline</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="generateConfig()">
+                    🚀 Generate Configuration
+                </button>
+                <button class="btn btn-secondary" onclick="resetConfig()">
+                    🔄 Reset to Defaults
+                </button>
+                <button class="btn btn-export" onclick="exportConfig()">
+                    📥 Export Config
+                </button>
+            </div>
+
+            <!-- Configuration Output -->
+            <div class="config-output" id="config_output">
+# Configuration will appear here after generation...
+# Click "Generate Configuration" to see your pipeline setup
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let currentConfig = {
+            detection_model: 'yolo',
+            caption_model: 'blip_base',
+            options: {}
+        };
+
+        // Model selection handler
+        function selectModel(modelType, element) {
+            // Remove selected class from siblings
+            const siblings = element.parentElement.querySelectorAll('.model-option');
+            siblings.forEach(sibling => sibling.classList.remove('selected'));
+            
+            // Add selected class to clicked element
+            element.classList.add('selected');
+            
+            // Update configuration
+            const radioInput = element.querySelector('input[type="radio"]');
+            if (radioInput.name === 'detection_model') {
+                currentConfig.detection_model = radioInput.value;
+            } else if (radioInput.name === 'caption_model') {
+                currentConfig.caption_model = radioInput.value;
+            }
+        }
+
+        // Slider value updates
+        document.getElementById('confidence_threshold').addEventListener('input', function() {
+            document.getElementById('confidence_value').textContent = this.value;
+        });
+
+        document.getElementById('processing_quality').addEventListener('input', function() {
+            const qualityMap = {1: 'Low', 2: 'Medium', 3: 'High'};
+            document.getElementById('quality_value').textContent = qualityMap[this.value];
+        });
+
+        // Generate configuration
+        function generateConfig() {
+            // Collect all form data
+            const detectionModel = document.querySelector('input[name="detection_model"]:checked').value;
+            const captionModel = document.querySelector('input[name="caption_model"]:checked').value;
+            const confidenceThreshold = document.getElementById('confidence_threshold').value;
+            const processingQuality = document.getElementById('processing_quality').value;
+            
+            // Collect checkboxes
+            const options = {};
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                options[checkbox.id] = checkbox.checked;
+            });
+
+            // Generate Python configuration
+            const config = `# Generated AI Model Configuration for Video Object Detection
+# Generated at: ${new Date().toISOString()}
+
+# ==========================================
+# MODEL CONFIGURATION
+# ==========================================
+
+# Object Detection Model
+DETECTION_MODEL = "${detectionModel}"
+DETECTION_MODEL_PATH = "/content/drive/MyDrive/TIM/models/${detectionModel}_model.pt"
+
+# Image Understanding Model  
+CAPTION_MODEL = "${captionModel}"
+CAPTION_MODEL_PATH = "/content/drive/MyDrive/TIM/models/${captionModel}_model/"
+
+# ==========================================
+# PROCESSING PARAMETERS
+# ==========================================
+
+# Detection Parameters
+CONFIDENCE_THRESHOLD = ${confidenceThreshold}
+PROCESSING_QUALITY = ${processingQuality}  # 1=Low, 2=Medium, 3=High
+
+# Video Processing Options
+PRESERVE_AUDIO = ${options.preserve_audio}
+ENABLE_OBJECT_TRACKING = ${options.object_tracking}
+SHOW_MOTION_TRAILS = ${options.motion_trails}
+GENERATE_FRAME_ANALYTICS = ${options.frame_analytics}
+
+# Visual Enhancement Options
+COLORED_OUTLINES = ${options.colored_outlines}
+SHOW_CLASS_LABELS = ${options.class_labels}
+DISPLAY_CONFIDENCE_SCORES = ${options.confidence_scores}
+SHOW_OBJECT_IDS = ${options.object_ids}
+
+# Performance Settings
+USE_GPU_ACCELERATION = ${options.gpu_acceleration}
+ENABLE_BATCH_PROCESSING = ${options.batch_processing}
+
+# Output Options
+SAVE_DETECTION_DATA = ${options.save_detections}
+EXPORT_KEY_FRAMES = ${options.export_frames}
+GENERATE_SUMMARY_REPORT = ${options.generate_summary}
+CREATE_OBJECT_TIMELINE = ${options.create_timeline}
+
+# ==========================================
+# INSTANTIATION CODE
+# ==========================================
+
+# Initialize the detector with selected configuration
+if ENABLE_OBJECT_TRACKING:
+    detector = VideoObjectTracker(
+        model_path="/content/drive/MyDrive/TIM/models/",
+        tracking_enabled=True
+    )
+else:
+    detector = AdvancedVideoObjectDetector(
+        model_path="/content/drive/MyDrive/TIM/models/"
+    )
+
+# Configure processing parameters
+processing_config = {
+    'confidence_threshold': CONFIDENCE_THRESHOLD,
+    'show_trails': SHOW_MOTION_TRAILS,
+    'save_analytics': GENERATE_FRAME_ANALYTICS,
+    'preserve_audio': PRESERVE_AUDIO
+}
+
+# Example usage:
+# detector.process_video_with_tracking(
+#     video_path='/content/drive/MyDrive/TIM/input_video.mp4',
+#     output_path='/content/drive/MyDrive/TIM/output/processed_video.mp4',
+#     **processing_config
+# )
+
+# ==========================================
+# NODE-BASED PROCESSING CONFIGURATION
+# ==========================================
+
+NODE_CONFIG = {
+    "nodes": [
+        {
+            "id": "input_node",
+            "type": "VideoInput",
+            "config": {
+                "path": "/content/drive/MyDrive/TIM/input_video.mp4"
+            }
+        },
+        {
+            "id": "detection_node", 
+            "type": "ObjectDetection",
+            "model": "${detectionModel}",
+            "config": {
+                "confidence_threshold": ${confidenceThreshold},
+                "gpu_acceleration": ${options.gpu_acceleration}
+            }
+        },
+        {
+            "id": "caption_node",
+            "type": "ImageCaptioning", 
+            "model": "${captionModel}",
+            "enabled": ${options.generate_summary}
+        },
+        {
+            "id": "tracking_node",
+            "type": "ObjectTracking",
+            "enabled": ${options.object_tracking},
+            "config": {
+                "show_trails": ${options.motion_trails},
+                "show_ids": ${options.object_ids}
+            }
+        },
+        {
+            "id": "visualization_node",
+            "type": "VideoVisualization",
+            "config": {
+                "colored_outlines": ${options.colored_outlines},
+                "show_labels": ${options.class_labels},
+                "show_confidence": ${options.confidence_scores}
+            }
+        },
+        {
+            "id": "output_node",
+            "type": "VideoOutput",
+            "config": {
+                "path": "/content/drive/MyDrive/TIM/output/processed_video.mp4",
+                "preserve_audio": ${options.preserve_audio},
+                "export_analytics": ${options.save_detections}
+            }
+        }
+    ],
+    "connections": [
+        {"from": "input_node", "to": "detection_node"},
+        {"from": "detection_node", "to": "caption_node"},
+        {"from": "caption_node", "to": "tracking_node"},
+        {"from": "tracking_node", "to": "visualization_node"},
+        {"from": "visualization_node", "to": "output_node"}
+    ]
+}
+
+print("Configuration generated successfully!")
+print(f"Detection Model: {DETECTION_MODEL}")
+print(f"Caption Model: {CAPTION_MODEL}")
+print(f"Confidence Threshold: {CONFIDENCE_THRESHOLD}")
+print(f"Object Tracking: {'Enabled' if ENABLE_OBJECT_TRACKING else 'Disabled'}")`;
+
+            document.getElementById('config_output').textContent = config;
+        }
+
+        // Reset configuration
+        function resetConfig() {
+            // Reset radio buttons
+            document.getElementById('yolo').checked = true;
+            document.getElementById('blip_base').checked = true;
+            
+            // Reset model selections
+            document.querySelectorAll('.model-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.querySelector('input[value="yolo"]').closest('.model-option').classList.add('selected');
+            document.querySelector('input[value="blip_base"]').closest('.model-option').classList.add('selected');
+            
+            // Reset sliders
+            document.getElementById('confidence_threshold').value = 0.5;
+            document.getElementById('confidence_value').textContent = '0.5';
+            document.getElementById('processing_quality').value = 2;
+            document.getElementById('quality_value').textContent = 'Medium';
+            
+            // Reset checkboxes
+            const defaultChecked = ['preserve_audio', 'colored_outlines', 'class_labels', 'confidence_scores', 'gpu_acceleration', 'save_detections'];
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = defaultChecked.includes(checkbox.id);
+            });
+            
+            // Clear output
+            document.getElementById('config_output').textContent = '# Configuration will appear here after generation...\n# Click "Generate Configuration" to see your pipeline setup';
+        }
+
+        // Export configuration
+        function exportConfig() {
+            const configText = document.getElementById('config_output').textContent;
+            if (configText.includes('Configuration will appear here')) {
+                alert('Please generate a configuration first!');
+                return;
+            }
+            
+            const blob = new Blob([configText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ai_model_config.py';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize default selections
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('input[value="yolo"]').closest('.model-option').classList.add('selected');
+            document.querySelector('input[value="blip_base"]').closest('.model-option').classList.add('selected');
+        });
+    </script>
+</body>
+</html>
