@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Llama AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e6ed;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.8rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        .server-status {
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: white;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background: #28a745;
+            box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+        }
+
+        .status-offline {
+            background: #dc3545;
+            box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .upload-panel {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            border: 2px dashed #ced4da;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .upload-section:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-button {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+            width: 100%;
+            border: none;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .file-input-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .image-preview {
+            margin-top: 20px;
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .no-image-text {
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .analyze-button {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .analyze-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.6);
+        }
+
+        .analyze-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .results-panel {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .results-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .result-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-header {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .extracted-text {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            min-height: 60px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .objects-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .object-tag {
+            background: linear-gradient(45deg, #17a2b8, #138496);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .ai-description {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #1565c0;
+            margin-bottom: 15px;
+        }
+
+        .audio-section {
+            text-align: center;
+            padding: 15px;
+            background: #f0f8f0;
+            border-radius: 8px;
+            border: 1px solid #c8e6c9;
+        }
+
+        .tts-button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+        }
+
+        .tts-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 107, 107, 0.6);
+        }
+
+        .tts-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .audio-player {
+            margin-top: 15px;
+        }
+
+        .audio-player audio {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2rem;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            border: 1px solid #f1aeb5;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+
+        .success {
+            background: linear-gradient(135deg, #d1edff, #b3d9ff);
+            border: 1px solid #9fcdff;
+            color: #0f5132;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+
+        .empty-results {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                margin: 10px;
+            }
+            
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Simple Llama AI Assistant</h1>
+            <p>Upload an image to extract text, detect objects, and hear the results</p>
+        </div>
+
+        <div class="server-status">
+            <span class="status-indicator status-offline" id="serverStatus"></span>
+            <span>Llama AI Server: <span id="serverStatusText">Checking...</span></span>
+        </div>
+
+        <div class="main-content">
+            <!-- Upload Panel -->
+            <div class="upload-panel">
+                <div class="upload-section">
+                    <div class="file-input-wrapper">
+                        <input type="file" id="imageInput" class="file-input" accept="image/*">
+                        <label for="imageInput" class="file-input-button">
+                            📷 Choose Image File
+                        </label>
+                    </div>
+                    <p style="margin-top: 15px; color: #6c757d; font-size: 0.9rem;">
+                        Supported: JPG, PNG, BMP, TIFF, WebP, GIF
+                    </p>
+                </div>
+
+                <div class="image-preview" id="imagePreview">
+                    <div class="no-image-text">No image selected</div>
+                </div>
+
+                <button id="analyzeButton" class="analyze-button" disabled>
+                    🚀 Analyze Image with AI
+                </button>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="results-panel">
+                <div class="results-title">📊 AI Analysis Results</div>
+                
+                <div id="resultsContent">
+                    <div class="empty-results">
+                        Upload an image and click "Analyze Image with AI" to see results here.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>AI is analyzing your image... Please wait</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="success" class="success" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Configuration
+        const serverUrl = 'http://localhost:8003';
+        
+        let selectedFile = null;
+        let currentAudioUrl = null;
+        
+        // DOM elements
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const analyzeButton = document.getElementById('analyzeButton');
+        const resultsContent = document.getElementById('resultsContent');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const success = document.getElementById('success');
+        const serverStatus = document.getElementById('serverStatus');
+        const serverStatusText = document.getElementById('serverStatusText');
+
+        // Check server status
+        async function checkServerStatus() {
+            try {
+                const response = await fetch(`${serverUrl}/health`);
+                if (response.ok) {
+                    const healthData = await response.json();
+                    serverStatus.className = 'status-indicator status-online';
+                    serverStatusText.textContent = 'Online';
+                    console.log('Server health:', healthData);
+                    return true;
+                } else {
+                    throw new Error('Server error');
+                }
+            } catch (err) {
+                serverStatus.className = 'status-indicator status-offline';
+                serverStatusText.textContent = 'Offline';
+                return false;
+            }
+        }
+
+        // Handle image upload
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFile = file;
+                analyzeButton.disabled = false;
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.innerHTML = `<img src="${e.target.result}" class="preview-image" alt="Preview">`;
+                };
+                reader.readAsDataURL(file);
+                
+                hideMessages();
+            }
+        });
+
+        // Analyze image
+        analyzeButton.addEventListener('click', async () => {
+            if (!selectedFile) {
+                showError('Please select an image first.');
+                return;
+            }
+
+            const isServerOnline = await checkServerStatus();
+            if (!isServerOnline) {
+                showError('Server is not available. Please check if the Llama server is running on ' + serverUrl);
+                return;
+            }
+
+            showLoading();
+            hideMessages();
+
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                const response = await fetch(`${serverUrl}/analyze_image`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                hideLoading();
+                displayResults(result);
+                showSuccess('Image analysis completed successfully!');
+
+            } catch (err) {
+                hideLoading();
+                showError(`Analysis failed: ${err.message}`);
+                console.error('Analysis error:', err);
+            }
+        });
+
+        // Display analysis results
+        function displayResults(result) {
+            let content = '';
+            
+            console.log('Analysis result:', result); // Debug log
+
+            // Debug information
+            content += `
+                <div class="result-section" style="border-left-color: #ffc107;">
+                    <div class="result-header">
+                        🔧 Debug Information
+                    </div>
+                    <div style="font-family: monospace; font-size: 0.9rem; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                        Server Response: ${JSON.stringify(result, null, 2)}
+                    </div>
+                </div>
+            `;
+
+            // Text extraction results
+            if (result.text_extraction) {
+                const textResult = result.text_extraction;
+                const extractedText = textResult.full_text || '';
+                
+                content += `
+                    <div class="result-section">
+                        <div class="result-header">
+                            📝 Extracted Text
+                            ${textResult.ocr_engine ? `<span style="font-size: 0.8rem; color: #6c757d;">(${textResult.ocr_engine})</span>` : ''}
+                        </div>
+                `;
+                
+                if (extractedText.trim()) {
+                    content += `<div class="extracted-text">${extractedText}</div>`;
+                } else {
+                    content += `<div class="extracted-text" style="color: #6c757d; font-style: italic;">No text found in the image.</div>`;
+                }
+                
+                // Debug info
+                if (textResult.debug_info) {
+                    content += `<div style="font-size: 0.8rem; color: #6c757d; margin-top: 10px;">Debug: ${textResult.debug_info}</div>`;
+                }
+                
+                // Always show TTS button for any text (including test text)
+                const textForTTS = extractedText || 'This is a test audio message to verify text-to-speech functionality is working properly.';
+                
+                // Store text in a data attribute to avoid escaping issues
+                const buttonId = 'tts-extracted-' + Math.random().toString(36).substr(2, 9);
+                
+                content += `
+                    <div class="audio-section">
+                        <p style="font-size: 0.9rem; color: #495057; margin-bottom: 10px;">
+                            ${extractedText ? 'Convert extracted text to speech:' : 'Test audio functionality:'}
+                        </p>
+                        <button class="tts-button" id="${buttonId}" data-text="${encodeURIComponent(textForTTS)}">
+                            🔊 ${extractedText ? 'Play Extracted Text' : 'Test Audio System'}
+                        </button>
+                        <div class="audio-player" id="audioPlayer" style="display: none; margin-top: 15px;">
+                            <audio controls id="audioElement" style="width: 100%;">
+                                Your browser does not support the audio element.
+                            </audio>
+                        </div>
+                    </div>
+                `;
+                
+                content += `</div>`;
+                
+                // Add click handler after content is added
+                setTimeout(() => {
+                    const button = document.getElementById(buttonId);
+                    if (button) {
+                        button.addEventListener('click', () => {
+                            const text = decodeURIComponent(button.getAttribute('data-text'));
+                            convertToSpeech(text);
+                        });
+                    }
+                }, 100);
+            }
+
+            // Object detection results
+            if (result.object_detection) {
+                const objectResult = result.object_detection;
+                const detections = objectResult.detections || [];
+                
+                content += `
+                    <div class="result-section">
+                        <div class="result-header">
+                            🔍 Detected Objects (${detections.length})
+                        </div>
+                        <div class="objects-list">
+                `;
+                
+                if (detections.length > 0) {
+                    detections.forEach(obj => {
+                        content += `<span class="object-tag">${obj.class_name} (${(obj.confidence * 100).toFixed(0)}%)</span>`;
+                    });
+                } else {
+                    content += '<span style="color: #6c757d; font-style: italic;">No objects detected</span>';
+                }
+                
+                content += `</div></div>`;
+            }
+
+            // AI description
+            if (result.ai_description) {
+                const aiButtonId = 'tts-ai-' + Math.random().toString(36).substr(2, 9);
+                
+                content += `
+                    <div class="result-section">
+                        <div class="result-header">
+                            🤖 AI Analysis
+                        </div>
+                        <div class="ai-description">${result.ai_description}</div>
+                        <div class="audio-section">
+                            <button class="tts-button" id="${aiButtonId}" data-text="${encodeURIComponent(result.ai_description)}">
+                                🔊 Play AI Description
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Add click handler for AI description
+                setTimeout(() => {
+                    const button = document.getElementById(aiButtonId);
+                    if (button) {
+                        button.addEventListener('click', () => {
+                            const text = decodeURIComponent(button.getAttribute('data-text'));
+                            convertToSpeech(text);
+                        });
+                    }
+                }, 100);
+            }
+
+            if (content) {
+                resultsContent.innerHTML = content;
+            } else {
+                resultsContent.innerHTML = '<div class="empty-results">No results to display.</div>';
+            }
+        }
+
+        // Convert text to speech with detailed logging
+        async function convertToSpeech(text) {
+            console.log('TTS request for text:', text); // Debug log
+            
+            if (!text || !text.trim()) {
+                showError('No text to convert to speech.');
+                return;
+            }
+
+            // Clean the text
+            const cleanText = text.trim();
+            console.log('Cleaned text for TTS:', cleanText);
+
+            try {
+                showLoading();
+                console.log('Sending TTS request to server...'); // Debug log
+                
+                const formData = new FormData();
+                formData.append('text', cleanText);
+                
+                const response = await fetch(`${serverUrl}/text_to_speech`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                console.log('TTS response status:', response.status); // Debug log
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('TTS error response:', errorText); // Debug log
+                    throw new Error(`Speech generation failed: ${response.status} - ${errorText}`);
+                }
+
+                hideLoading();
+
+                // Clean up previous audio
+                if (currentAudioUrl) {
+                    URL.revokeObjectURL(currentAudioUrl);
+                }
+
+                // Create audio from response
+                const audioBlob = await response.blob();
+                console.log('Audio blob size:', audioBlob.size); // Debug log
+                console.log('Audio blob type:', audioBlob.type); // Debug log
+                
+                if (audioBlob.size === 0) {
+                    throw new Error('Received empty audio file');
+                }
+                
+                currentAudioUrl = URL.createObjectURL(audioBlob);
+                console.log('Audio URL created:', currentAudioUrl); // Debug log
+                
+                // Show and play audio
+                const audioPlayer = document.getElementById('audioPlayer');
+                const audioElement = document.getElementById('audioElement');
+                
+                if (audioPlayer && audioElement) {
+                    audioElement.src = currentAudioUrl;
+                    audioPlayer.style.display = 'block';
+                    
+                    // Auto-play the audio
+                    try {
+                        console.log('Attempting to play audio...'); // Debug log
+                        await audioElement.play();
+                        showSuccess('Audio is now playing!');
+                        console.log('Audio playback started successfully'); // Debug log
+                    } catch (playError) {
+                        console.warn('Auto-play failed:', playError); // Debug log
+                        showSuccess('Audio generated! Click play to listen.');
+                    }
+                } else {
+                    console.log('Audio player elements not found, using fallback'); // Debug log
+                    // Fallback: create temporary audio element
+                    const tempAudio = new Audio(currentAudioUrl);
+                    
+                    tempAudio.addEventListener('loadeddata', () => {
+                        console.log('Audio loaded successfully'); // Debug log
+                    });
+                    
+                    tempAudio.addEventListener('error', (e) => {
+                        console.error('Audio error:', e); // Debug log
+                    });
+                    
+                    tempAudio.play().then(() => {
+                        showSuccess('Audio is playing!');
+                        console.log('Fallback audio playback successful'); // Debug log
+                    }).catch(err => {
+                        console.error('Fallback audio playback failed:', err); // Debug log
+                        showError('Audio generated but playback failed. Check browser console.');
+                    });
+                }
+
+            } catch (err) {
+                hideLoading();
+                console.error('TTS error:', err); // Debug log
+                showError(`Speech generation failed: ${err.message}. Check browser console for details.`);
+            }
+        }
+
+        // Clear results and reset
+        function clearResults() {
+            selectedFile = null;
+            imageInput.value = '';
+            imagePreview.innerHTML = '<div class="no-image-text">No image selected</div>';
+            resultsContent.innerHTML = '<div class="empty-results">Upload an image and click "Analyze Image with AI" to see results here.</div>';
+            analyzeButton.disabled = true;
+            hideMessages();
+            
+            // Clean up audio
+            if (currentAudioUrl) {
+                URL.revokeObjectURL(currentAudioUrl);
+                currentAudioUrl = null;
+            }
+        }
+
+        // Utility functions
+        function showLoading() {
+            loading.style.display = 'block';
+        }
+
+        function hideLoading() {
+            loading.style.display = 'none';
+        }
+
+        function showError(message) {
+            error.textContent = message;
+            error.style.display = 'block';
+            setTimeout(() => {
+                error.style.display = 'none';
+            }, 6000);
+        }
+
+        function showSuccess(message) {
+            success.textContent = message;
+            success.style.display = 'block';
+            setTimeout(() => {
+                success.style.display = 'none';
+            }, 4000);
+        }
+
+        function hideMessages() {
+            error.style.display = 'none';
+            success.style.display = 'none';
+        }
+
+        // Add clear button functionality
+        function addClearButton() {
+            const clearButton = document.createElement('button');
+            clearButton.textContent = '🗑️ Clear Results';
+            clearButton.className = 'analyze-button';
+            clearButton.style.background = 'linear-gradient(45deg, #dc3545, #c82333)';
+            clearButton.style.marginTop = '10px';
+            clearButton.onclick = clearResults;
+            
+            const analyzeButtonParent = analyzeButton.parentNode;
+            analyzeButtonParent.appendChild(clearButton);
+        }
+
+        // Initialize the app
+        function initializeApp() {
+            checkServerStatus();
+            addClearButton();
+            
+            // Periodic server status check
+            setInterval(checkServerStatus, 30000); // Check every 30 seconds
+            
+            console.log('Simple Llama AI Assistant initialized');
+        }
+
+        // Start the app when DOM is loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
+    </script>
+</body>
+</html>

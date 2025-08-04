@@ -1,0 +1,3 @@
+(cleanenv) C:\Capstone\RestAPIBased\RunningOnnxModelAsServerWithRestEndpoint\Claude\PythonGUI\03Aug>python -m venv cleanenv
+
+(cleanenv) C:\Capstone\RestAPIBased\RunningOnnxModelAsServerWithRestEndpoint\Claude\PythonGUI\03Aug>cleanenv\Scripts\activate
